@@ -67,6 +67,14 @@ function BookRatingRubric() {
 
   // Debounced search
   useEffect(() => {
+    // Don't search if we just selected a book (check if title exactly matches a result)
+    const matchesResult = searchResults.some(r => r.title === bookInfo.title);
+    if (matchesResult) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
     const timer = setTimeout(() => {
       if (bookInfo.title) {
         searchBooks(bookInfo.title);
@@ -82,8 +90,8 @@ function BookRatingRubric() {
       author: book.author,
       coverUrl: book.coverUrl || ''
     });
-    setShowDropdown(false);
     setSearchResults([]);
+    setShowDropdown(false);
   };
 
   const categories = [
@@ -240,14 +248,14 @@ function BookRatingRubric() {
 
               <div className="book-info-form">
                 <div className="form-group search-group">
-                  <label>Book Title</label>
+                  <label>Book Title & Author</label>
                   <div className="search-input-wrapper">
                     <input
                       type="text"
                       value={bookInfo.title}
                       onChange={(e) => setBookInfo(prev => ({ ...prev, title: e.target.value }))}
                       onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
-                      placeholder="Start typing to search..."
+                      placeholder="e.g. 1984 George Orwell"
                     />
                     {isSearching && <span className="searching-indicator">Searching...</span>}
                   </div>
@@ -276,27 +284,18 @@ function BookRatingRubric() {
                 </div>
 
                 <div className="form-group">
-                  <label>Author</label>
-                  <input
-                    type="text"
-                    value={bookInfo.author}
-                    onChange={(e) => setBookInfo(prev => ({ ...prev, author: e.target.value }))}
-                    placeholder="Enter author name"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Book Cover URL (optional)</label>
-                  {bookInfo.coverUrl && (
-                    <div className="cover-preview">
-                      <img src={bookInfo.coverUrl} alt="Book cover" />
-                    </div>
-                  )}
+                  <label>Book Cover</label>
+                  <div className="cover-preview">
+                    <img 
+                      src={bookInfo.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="225" viewBox="0 0 150 225"%3E%3Crect fill="%23333" width="150" height="225"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%23666" font-size="16" dy=".3em"%3ENo Cover%3C/text%3E%3C/svg%3E'} 
+                      alt="Book cover" 
+                    />
+                  </div>
                   <input
                     type="text"
                     value={bookInfo.coverUrl}
                     onChange={(e) => setBookInfo(prev => ({ ...prev, coverUrl: e.target.value }))}
-                    placeholder="Paste image URL"
+                    placeholder="Paste image URL (optional)"
                   />
                 </div>
 
@@ -359,39 +358,50 @@ function BookRatingRubric() {
 
           {/* Bonus Point Slide */}
           {currentCategory.type === 'bonus' && (
-            <div className="slide-content gradient-bg bonus-slide">
-              <div className="bonus-header">BONUS POINT</div>
-              <h3>{currentCategory.title}</h3>
-              
-              <p className="bonus-description">{currentCategory.description}</p>
+            <div className="slide-content gradient-bg">
+              <div className="category-header">
+                <div className="points-label">BONUS POINT</div>
+                <h3>{currentCategory.title}</h3>
+              </div>
 
-              <div className="bonus-button-container">
-                <button
-                  onClick={handleBonusToggle}
-                  className={`bonus-button ${scores.bonus ? 'active' : ''}`}
-                >
-                  {scores.bonus ? '✓ Bonus Added (+1)' : 'Add Bonus Point'}
-                </button>
+              <div className="bonus-content">
+                <p className="bonus-description">{currentCategory.description}</p>
 
-                {sparkles.map((sparkle) => {
-                  const radians = (sparkle.angle * Math.PI) / 180;
-                  const distance = 80;
-                  const tx = Math.cos(radians) * distance;
-                  const ty = Math.sin(radians) * distance;
-                  
-                  return (
-                    <div
-                      key={sparkle.id}
-                      className="sparkle"
-                      style={{
-                        '--tx': `${tx}px`,
-                        '--ty': `${ty}px`,
-                      }}
-                    >
-                      ✨
-                    </div>
-                  );
-                })}
+                <div className="bonus-button-container">
+                  <button
+                    onClick={() => {
+                      handleBonusToggle();
+                      setTimeout(() => setCurrentSlide(currentSlide + 1), 600);
+                    }}
+                    className={`bonus-button ${scores.bonus ? 'active' : ''}`}
+                  >
+                    {scores.bonus ? '✓ Bonus Added (+1)' : 'Add Bonus Point'}
+                  </button>
+
+                  {sparkles.map((sparkle) => {
+                    const radians = (sparkle.angle * Math.PI) / 180;
+                    const distance = 80;
+                    const tx = Math.cos(radians) * distance;
+                    const ty = Math.sin(radians) * distance;
+                    
+                    return (
+                      <div
+                        key={sparkle.id}
+                        className="sparkle"
+                        style={{
+                          '--tx': `${tx}px`,
+                          '--ty': `${ty}px`,
+                        }}
+                      >
+                        ✨
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="helper-text">
+                Click to add the bonus point
               </div>
             </div>
           )}
